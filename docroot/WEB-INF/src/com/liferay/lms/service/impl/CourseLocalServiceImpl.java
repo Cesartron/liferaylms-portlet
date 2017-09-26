@@ -91,6 +91,7 @@ import com.liferay.portal.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.LayoutSetPrototypeLocalServiceUtil;
 import com.liferay.portal.service.MembershipRequestLocalServiceUtil;
+import com.liferay.portal.service.ResourcePermissionLocalServiceUtil;
 import com.liferay.portal.service.RoleLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.ServiceContextThreadLocal;
@@ -424,7 +425,26 @@ public List<Course> getPublicCoursesByCompanyId(Long companyId, int start, int e
 				
 				ModuleLocalServiceUtil.addModule(newModule);
 				
+			
+				 try {
+				    	Role siteMember = RoleLocalServiceUtil.fetchRole(newModule.getCompanyId(), RoleConstants.SITE_MEMBER);
+				    	ResourcePermissionLocalServiceUtil.setResourcePermissions(newModule.getCompanyId(), 
+				    			Module.class.getName(),ResourceConstants.SCOPE_INDIVIDUAL, String.valueOf(newModule.getModuleId()),  siteMember.getRoleId(),  new String[]{"VIEW","ACCESS"});
+				   
+				    	resourceLocalService.addResources(
+								newModule.getCompanyId(), newModule.getGroupId(), newModule.getUserId(),
+						Module.class.getName(), newModule.getPrimaryKey(), false,
+						true, true);
+					} catch (PortalException e) {
+						if(log.isDebugEnabled())e.printStackTrace();
+						if(log.isInfoEnabled())log.info(e.getMessage());
+						throw new SystemException(e);
+					}
+				
 				log.debug("    + Module : " + newModule.getTitle(Locale.getDefault()) +"("+newModule.getModuleId()+")" );
+				ModuleLocalServiceUtil.updateModule(newModule);
+				
+			
 				
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -1390,8 +1410,10 @@ public List<Course> getPublicCoursesByCompanyId(Long companyId, int start, int e
 				result="error-not-valid-user";
 			}
 		}catch (PortalException e){
+			result = e.getMessage();
 			e.printStackTrace();
 		}catch (SystemException e){
+			result = e.getMessage();
 			e.printStackTrace();
 		}
 		return result;
