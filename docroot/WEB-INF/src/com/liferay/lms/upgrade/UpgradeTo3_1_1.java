@@ -21,7 +21,7 @@ import com.liferay.portal.service.RoleLocalServiceUtil;
 
 public class UpgradeTo3_1_1 extends UpgradeProcess {
 	public int getThreshold() {
-		return 212;
+		return 213;
 	}
 
 	protected void doUpgrade() throws Exception {
